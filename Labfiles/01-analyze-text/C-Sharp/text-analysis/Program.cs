@@ -4,7 +4,8 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 
 // Import namespaces
-
+using Azure;
+using Azure.AI.TextAnalytics;
 
 namespace text_analysis
 {
@@ -21,7 +22,9 @@ namespace text_analysis
                 string aiSvcKey = configuration["AIServicesKey"];
 
                 // Create client using endpoint and key
-
+                AzureKeyCredential credentials = new AzureKeyCredential(aiSvcKey);
+                Uri endpoint = new Uri(aiSvcEndpoint);
+                TextAnalyticsClient aiClient = new TextAnalyticsClient(endpoint, credentials);
 
                 // Analyze each text file in the reviews folder
                 var folderPath = Path.GetFullPath("./reviews");  
@@ -34,21 +37,42 @@ namespace text_analysis
                     var text = sr.ReadToEnd();
                     sr.Close();
                     Console.WriteLine("\n" + text);
+                    Console.WriteLine("\n-------------\n");
 
                     // Get language
-
+                    DetectedLanguage language = aiClient.DetectLanguage(text);
+                    Console.WriteLine($"Language: {language.Name}");
 
                     // Get sentiment
-
+                    DocumentSentiment sentiment = aiClient.AnalyzeSentiment(text);
+                    Console.WriteLine($"Sentiment: {sentiment.Sentiment}");
+                    Console.WriteLine("\n-------------\n");
 
                     // Get key phrases
-
+                    KeyPhraseCollection keyPhrases = aiClient.ExtractKeyPhrases(text);
+                    Console.WriteLine("Key Phrases:");
+                    foreach(string keyPhrase in keyPhrases)
+                    {
+                        Console.WriteLine($"Key Phrase: {keyPhrase}");
+                    }
+                    Console.WriteLine("\n-------------");
 
                     // Get entities
-
+                    CategorizedEntityCollection entities = aiClient.RecognizeEntities(text);
+                    Console.WriteLine("Entities:");
+                    foreach (CategorizedEntity entity in entities)
+                    {
+                        Console.WriteLine($"Entity: {entity.Text} ({entity.Category})");
+                    }
+                    Console.WriteLine("\n-------------\n");
 
                     // Get linked entities
-
+                    LinkedEntityCollection linkedEntities = aiClient.RecognizeLinkedEntities(text);
+                    Console.WriteLine("Linked Entities:");
+                    foreach (LinkedEntity linkedEntity in linkedEntities)
+                    {
+                        Console.WriteLine($"Linked Entity: {linkedEntity.Name} ({linkedEntity.DataSource})");
+                    }
 
                 }
             }
